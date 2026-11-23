@@ -145,3 +145,15 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Social Media API",
+    "DESCRIPTION": "RESTful API for a social media platform (Users, Profiles, Follows, Posts, Likes, Comments).",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "TAGS": [
+        {"name": "Auth", "description": "User registration, login, and token invalidation"},
+        {"name": "Users & Profiles", "description": "Profile management, user search, and follow system"},
+    ],
+}

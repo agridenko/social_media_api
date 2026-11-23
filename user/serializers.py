@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 
+from user.models import User
+
 User = get_user_model()
 
 
@@ -49,3 +51,46 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs["user"] = user
         return attrs
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "username",
+            "avatar"
+        )
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    followers_count = serializers.IntegerField(
+        read_only=True,
+        source="followers.count"
+    )
+    following_count = serializers.IntegerField(
+        read_only=True,
+        source="following.count"
+    )
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "username",
+            "avatar",
+            "bio",
+            "followers_count",
+            "following_count",
+            "is_following"
+        )
+        read_only_fields = ("id", "email")
+
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return request.user.following.filter(id=obj.id).exists()
+        return False
