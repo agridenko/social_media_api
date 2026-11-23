@@ -155,5 +155,7 @@ SPECTACULAR_SETTINGS = {
     "TAGS": [
         {"name": "Auth", "description": "User registration, login, and token invalidation"},
         {"name": "Users & Profiles", "description": "Profile management, user search, and follow system"},
+        {"name": "Posts", "description": "Post creation, feed retrieval, and hashtag filtering"},
+        {"name": "Likes & Comments", "description": "Post likes and comment management"},
     ],
 }
