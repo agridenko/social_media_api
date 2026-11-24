@@ -1,0 +1,45 @@
+name: Django CI
+
+# 1. Тригери: запускати при пуші в main/master і за будь-якого Pull Request
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    # 2. Віртуальна машина, на якій виконуватимуться команди
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1: Завантажуємо код нашого репозиторію на віртуальну машину GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Шаг 2: Встановлюємо Python 3.12 та кешуємо pip (щоб наступні зборки йшли за 10 секунд)
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Шаг 3: Оновлюємо pip та ставимо всі бібліотеки з requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Шаг 4: Перевіряємо код лінтером Ruff (PEP8, імпорти, синтаксис)
+      - name: Lint with Ruff
+        run: ruff check .
+
+      # Шаг 5: Перевіряємо, чи ми не забули створити міграції для моделей
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      # Шаг 6: Запускаємо тести з підрахунком coverage та падаємо, якщо покриття < 70%
+      - name: Run tests with coverage
+        run: |
+          coverage run --source='user,social' manage.py test
+          coverage report -m --fail-under=70

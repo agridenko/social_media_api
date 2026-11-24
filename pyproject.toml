@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 120
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    "*/migrations/*",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # E - ошибки PEP8, F - логические ошибки (Pyflakes), I - сортировка импортов
