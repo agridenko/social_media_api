@@ -1,3 +1,5 @@
+import re
+
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
@@ -84,7 +86,8 @@ class PostViewSet(viewsets.ModelViewSet):
         hashtag = self.request.query_params.get("hashtag")
         if hashtag:
             clean_tag = hashtag.lstrip("#")
-            queryset = queryset.filter(content__iregex=rf"#{clean_tag}\b")
+            escaped_tag = re.escape(clean_tag)
+            queryset = queryset.filter(content__iregex=rf"#{escaped_tag}\b")
 
         # Фільтрування за автором (?author=2)
         author_id = self.request.query_params.get("author")

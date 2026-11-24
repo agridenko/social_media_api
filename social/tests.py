@@ -69,6 +69,17 @@ class PostAndFeedTests(APITestCase):
         self.assertEqual(len(res.data), 1)
         self.assertIn("#python", res.data[0]["content"])
 
+    def test_filter_posts_by_hashtag_escapes_regex_chars(self):
+        Post.objects.create(
+            author=self.user1,
+            content="Post with #python hashtag"
+        )
+
+        for hashtag in ("(", "["):
+            res = self.client.get(POSTS_URL, {"hashtag": hashtag})
+            self.assertEqual(res.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(res.data), 0)
+
     def test_owner_can_update_and_delete_own_post_but_not_others(self):
         own_post = Post.objects.create(
             author=self.user1,

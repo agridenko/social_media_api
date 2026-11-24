@@ -31,6 +31,10 @@ class AuthTests(APITestCase):
         )
         self.assertNotIn("password", res.data)
 
+        user = User.objects.get(email=self.user_data["email"])
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
     def test_register_duplicate_email_fails(self):
         User.objects.create_user(**self.user_data)
         res = self.client.post(REGISTER_URL, self.user_data)
