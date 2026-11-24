@@ -45,6 +45,7 @@ social_media_api/
 ├── social_media_api/    # Project settings, root URLs, and Celery config
 ├── user/                # Custom User model, auth, profiles, and follow system
 ├── social/              # Posts, hashtag parsing, likes, comments, and Celery tasks
+├── .env.example         # Environment variables template
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml       # Ruff linter configuration
@@ -136,7 +137,12 @@ erDiagram
    cd social_media_api
    ```
 
-2. Build and start the services (Django, Redis, Celery worker):
+2. Create a `.env` file from the example template:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Build and start the services (Django, Redis, Celery worker):
    ```bash
    docker compose up --build
    ```
@@ -153,14 +159,18 @@ erDiagram
    source venv/bin/activate
    pip install -r requirements.txt
    ```
+2. Create a `.env` file from the example template:
+   ```bash
+   cp .env.example .env
+   ```
 
-2. Run migrations and start the development server:
+3. Run migrations and start the development server:
    ```bash
    python manage.py migrate
    python manage.py runserver
    ```
 
-3. *(Optional)* Start Redis and Celery worker in separate terminals for scheduled posts:
+4. *(Optional)* Start Redis and Celery worker in separate terminals for scheduled posts:
    ```bash
    redis-server
    celery -A social_media_api worker --loglevel=info
