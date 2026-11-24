@@ -1,6 +1,11 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view
+)
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +13,11 @@ from rest_framework.response import Response
 
 from social.models import Comment, Like, Post
 from social.permissions import IsOwnerOrReadOnly
-from social.serializers import CommentSerializer, PostDetailSerializer, PostSerializer
+from social.serializers import (
+    CommentSerializer,
+    PostDetailSerializer,
+    PostSerializer
+)
 from social.tasks import publish_scheduled_post
 
 
@@ -16,14 +25,16 @@ from social.tasks import publish_scheduled_post
     list=extend_schema(
         tags=["Posts"],
         summary="Retrieve posts feed",
-        description="Returns published posts from the current user and users they follow. "
+        description="Returns published posts from the current "
+                    "user and users they follow. "
                     "Supports filtering by `#hashtag` or `author` ID.",
         parameters=[
             OpenApiParameter(
                 name="hashtag",
                 type=str,
                 location=OpenApiParameter.QUERY,
-                description="Filter posts containing a specific hashtag (with or without `#`, e.g. `python`).",
+                description="Filter posts containing a specific "
+                            "hashtag (with or without `#`, e.g. `python`).",
             ),
             OpenApiParameter(
                 name="author",
@@ -36,7 +47,8 @@ from social.tasks import publish_scheduled_post
     create=extend_schema(
         tags=["Posts"],
         summary="Create a new post",
-        description="Creates a new post with text content and an optional image attachment.",
+        description="Creates a new post with text content and "
+                    "an optional image attachment.",
     ),
     retrieve=extend_schema(
         tags=["Posts"],
@@ -46,12 +58,14 @@ from social.tasks import publish_scheduled_post
     update=extend_schema(
         tags=["Posts"],
         summary="Full update of own post",
-        description="Updates all fields of a post. Allowed only for the post author.",
+        description="Updates all fields of a post. "
+                    "Allowed only for the post author.",
     ),
     partial_update=extend_schema(
         tags=["Posts"],
         summary="Partial update of own post",
-        description="Partially updates a post. Allowed only for the post author.",
+        description="Partially updates a post. "
+                    "Allowed only for the post author.",
     ),
     destroy=extend_schema(
         tags=["Posts"],
@@ -65,7 +79,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Показуємо лише опубліковані пости поточного користувача та тих, на кого він підписаний
+        # Показуємо лише опубліковані пости поточного користувача
+        # та тих, на кого він підписаний
         following_ids = user.following.values_list("id", flat=True)
         queryset = (
             Post.objects.filter(is_published=True)
@@ -95,19 +110,29 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         scheduled_at = serializer.validated_data.get("scheduled_at")
         if scheduled_at:
-            post = serializer.save(author=self.request.user, is_published=False)
-            publish_scheduled_post.apply_async(args=[post.id], eta=scheduled_at)
+            post = serializer.save(
+                author=self.request.user,
+                is_published=False
+            )
+            publish_scheduled_post.apply_async(
+                args=[post.id],
+                eta=scheduled_at
+            )
         else:
             serializer.save(author=self.request.user, is_published=True)
 
     @extend_schema(
         tags=["Posts"],
         summary="List own scheduled posts",
-        description="Returns posts created by the current user that are scheduled for future publication.",
+        description="Returns posts created by the current user "
+                    "that are scheduled for future publication.",
     )
     @action(detail=False, methods=["get"], url_path="scheduled")
     def scheduled(self, request):
-        queryset = Post.objects.filter(author=request.user, is_published=False).select_related("author")
+        queryset = Post.objects.filter(
+            author=request.user,
+            is_published=False
+        ).select_related("author")
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -118,13 +143,23 @@ class PostViewSet(viewsets.ModelViewSet):
         request=None,
         responses={
             200: OpenApiResponse(description="Post liked successfully."),
-            400: OpenApiResponse(description="You have already liked this post."),
+            400: OpenApiResponse(
+                description="You have already liked this post."
+            ),
         },
     )
-    @action(detail=True, methods=["post"], url_path="like")
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="like",
+        permission_classes=[IsAuthenticated]
+    )
     def like(self, request, pk=None):
         post = self.get_object()
-        like, created = Like.objects.get_or_create(user=request.user, post=post)
+        like, created = Like.objects.get_or_create(
+            user=request.user,
+            post=post
+        )
         if not created:
             return Response(
                 {"detail": "You have already liked this post."},
@@ -142,10 +177,18 @@ class PostViewSet(viewsets.ModelViewSet):
             400: OpenApiResponse(description="You have not liked this post."),
         },
     )
-    @action(detail=True, methods=["post"], url_path="unlike")
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="unlike",
+        permission_classes=[IsAuthenticated]
+    )
     def unlike(self, request, pk=None):
         post = self.get_object()
-        deleted_count, _ = Like.objects.filter(user=request.user, post=post).delete()
+        deleted_count, _ = Like.objects.filter(
+            user=request.user,
+            post=post
+        ).delete()
         if deleted_count == 0:
             return Response(
                 {"detail": "You have not liked this post."},
@@ -156,11 +199,15 @@ class PostViewSet(viewsets.ModelViewSet):
     @extend_schema(
         tags=["Likes & Comments"],
         summary="List liked posts",
-        description="Returns all published posts that the currently authenticated user has liked.",
+        description="Returns all published posts that the "
+                    "currently authenticated user has liked.",
     )
     @action(detail=False, methods=["get"], url_path="liked")
     def liked(self, request):
-        queryset = Post.objects.filter(likes__user=request.user, is_published=True).select_related("author")
+        queryset = Post.objects.filter(
+            likes__user=request.user,
+            is_published=True
+        ).select_related("author")
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -183,10 +230,16 @@ class PostCommentListCreateView(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Comment.objects.filter(post_id=self.kwargs["post_id"]).select_related("user")
+        return Comment.objects.filter(
+            post_id=self.kwargs["post_id"]
+        ).select_related("user")
 
     def perform_create(self, serializer):
-        post = get_object_or_404(Post, pk=self.kwargs["post_id"], is_published=True)
+        post = get_object_or_404(
+            Post,
+            pk=self.kwargs["post_id"],
+            is_published=True
+        )
         serializer.save(user=self.request.user, post=post)
 
 

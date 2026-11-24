@@ -37,7 +37,10 @@ class Like(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "post"], name="unique_user_post_like")
+            models.UniqueConstraint(
+                fields=["user", "post"],
+                name="unique_user_post_like"
+            )
         ]
 
     def __str__(self):
@@ -63,4 +66,5 @@ class Comment(models.Model):
         ordering = ["created_at"]
 
     def __str__(self):
-        return f"Comment #{self.id} by {self.user.email} on Post #{self.post.id}"
+        return (f"Comment #{self.id} by {self.user.email} "
+                f"on Post #{self.post.id}")

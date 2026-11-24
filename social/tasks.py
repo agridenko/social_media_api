@@ -8,7 +8,8 @@ def publish_scheduled_post(post_id: int) -> str:
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
-        return f"Post #{post_id} not found (possibly deleted before publishing)."
+        return (f"Post #{post_id} not found "
+                f"(possibly deleted before publishing).")
 
     if not post.is_published:
         post.is_published = True

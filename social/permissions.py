@@ -3,7 +3,8 @@ from rest_framework import permissions
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
-    Дозволяє читання (GET, HEAD, OPTIONS) будь-якому авторизованому користувачеві,
+    Дозволяє читання (GET, HEAD, OPTIONS)
+    будь-якому авторизованому користувачеві,
     але зміна та видалення (PUT, PATCH, DELETE) - тільки автору об'єкта.
     """
 

@@ -1,5 +1,10 @@
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    extend_schema_view,
+    OpenApiParameter
+)
 from rest_framework import generics, status, viewsets, filters
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -15,8 +20,6 @@ from user.serializers import (
     UserRegisterSerializer, UserDetailSerializer, UserListSerializer,
 )
 
-User = get_user_model()
-
 
 class RegisterUserView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
@@ -29,7 +32,8 @@ class RegisterUserView(generics.CreateAPIView):
         responses={
             201: UserRegisterSerializer,
             400: OpenApiResponse(
-                description="Validation error (e.g. email already exists or weak password)."
+                description="Validation error "
+                            "(e.g. email already exists or weak password)."
             )
         },
     )
@@ -44,17 +48,28 @@ class LoginUserView(ObtainAuthToken):
     @extend_schema(
         tags=["Auth"],
         summary="Obtain authentication token",
-        description="Authenticates a user with email and password and returns a DRF Token. "
-                    "Use this token in the Authorization header as: `Token <your_token>`.",
+        description="Authenticates a user with email and "
+                    "password and returns a DRF Token. "
+                    "Use this token in the Authorization "
+                    "header as: `Token <your_token>`.",
         responses={
             200: OpenApiResponse(
                 description="Successful authentication",
                 response={
                     "type": "object",
                     "properties": {
-                        "token": {"type": "string", "example": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"},
-                        "user_id": {"type": "integer", "example": 1},
-                        "email": {"type": "string", "example": "user@example.com"},
+                        "token": {
+                            "type": "string",
+                            "example": "9944b09199c62bc..."
+                        },
+                        "user_id": {
+                            "type": "integer",
+                            "example": 1
+                        },
+                        "email": {
+                            "type": "string",
+                            "example": "user@example.com"
+                        },
                     },
                 },
             ),
@@ -62,7 +77,9 @@ class LoginUserView(ObtainAuthToken):
         },
     )
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={"request": request})
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
@@ -79,17 +96,25 @@ class LogoutUserView(APIView):
     @extend_schema(
         tags=["Auth"],
         summary="Logout and invalidate token",
-        description="Deletes the current user's authentication token from the database, logging them out.",
+        description="Deletes the current user's authentication "
+                    "token from the database, logging them out.",
         request=None,
         responses={
             200: OpenApiResponse(
                 description="Successfully logged out",
                 response={
                     "type": "object",
-                    "properties": {"detail": {"type": "string", "example": "Successfully logged out."}},
+                    "properties": {
+                        "detail": {
+                            "type": "string",
+                            "example": "Successfully logged out."
+                        }
+                    },
                 },
             ),
-            401: OpenApiResponse(description="Authentication credentials were not provided."),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided."
+            ),
         },
     )
     def post(self, request, *args, **kwargs):
@@ -104,17 +129,20 @@ class LogoutUserView(APIView):
     get=extend_schema(
         tags=["Users & Profiles"],
         summary="Retrieve own profile",
-        description="Returns detailed profile information for the currently authenticated user.",
+        description="Returns detailed profile information for "
+                    "the currently authenticated user.",
     ),
     put=extend_schema(
         tags=["Users & Profiles"],
         summary="Full update of own profile",
-        description="Updates all writable fields of the authenticated user's profile (including avatar upload).",
+        description="Updates all writable fields of the authenticated "
+                    "user's profile (including avatar upload).",
     ),
     patch=extend_schema(
         tags=["Users & Profiles"],
         summary="Partial update of own profile",
-        description="Partially updates fields of the authenticated user's profile (username, bio, avatar, etc.).",
+        description="Partially updates fields of the authenticated "
+                    "user's profile (username, bio, avatar, etc.).",
     ),
     delete=extend_schema(
         tags=["Users & Profiles"],
@@ -134,24 +162,27 @@ class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
     list=extend_schema(
         tags=["Users & Profiles"],
         summary="List and search users",
-        description="Returns a list of all users. Supports searching by username, email, first_name, or last_name.",
+        description="Returns a list of all users. Supports searching "
+                    "by username, email, first_name, or last_name.",
         parameters=[
             OpenApiParameter(
                 name="search",
                 type=str,
                 location=OpenApiParameter.QUERY,
-                description="Filter users by username, email, first name, or last name.",
+                description="Filter users by username, "
+                            "email, first name, or last name.",
             )
         ],
     ),
     retrieve=extend_schema(
         tags=["Users & Profiles"],
         summary="Retrieve user profile by ID",
-        description="Returns detailed public profile of a specific user, including follower counts and follow status.",
+        description="Returns detailed public profile of a specific user, "
+                    "including follower counts and follow status.",
     ),
 )
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
     search_fields = ["username", "email", "first_name", "last_name"]
@@ -164,11 +195,15 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     @extend_schema(
         tags=["Users & Profiles"],
         summary="Follow a user",
-        description="Subscribes the authenticated user to the user specified by `{id}`.",
+        description="Subscribes the authenticated user "
+                    "to the user specified by `{id}`.",
         request=None,
         responses={
             200: OpenApiResponse(description="Successfully followed user."),
-            400: OpenApiResponse(description="Cannot follow yourself or already following this user."),
+            400: OpenApiResponse(
+                description="Cannot follow yourself or already "
+                            "following this user."
+            ),
         },
     )
     @action(
@@ -199,11 +234,14 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     @extend_schema(
         tags=["Users & Profiles"],
         summary="Unfollow a user",
-        description="Unsubscribes the authenticated user from the user specified by `{id}`.",
+        description="Unsubscribes the authenticated user "
+                    "from the user specified by `{id}`.",
         request=None,
         responses={
             200: OpenApiResponse(description="Successfully unfollowed user."),
-            400: OpenApiResponse(description="You are not following this user."),
+            400: OpenApiResponse(
+                description="You are not following this user."
+            ),
         },
     )
     @action(
@@ -227,10 +265,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     @extend_schema(
         tags=["Users & Profiles"],
         summary="List following users",
-        description="Returns the list of users that the currently authenticated user is following.",
+        description="Returns the list of users that the currently "
+                    "authenticated user is following.",
     )
     @action(
-        detail=True,
+        detail=False,
         methods=["get"],
         url_path="following"
     )
@@ -242,10 +281,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     @extend_schema(
         tags=["Users & Profiles"],
         summary="List followers",
-        description="Returns the list of users who follow the currently authenticated user.",
+        description="Returns the list of users who follow "
+                    "the currently authenticated user.",
     )
     @action(
-        detail=True,
+        detail=False,
         methods=["get"],
         url_path="followers"
     )

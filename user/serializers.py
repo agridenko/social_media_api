@@ -3,8 +3,6 @@ from django.contrib.auth import get_user_model, authenticate
 
 from user.models import User
 
-User = get_user_model()
-
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -14,7 +12,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "id",
             "email",
@@ -23,7 +21,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        return get_user_model().objects.create_user(**validated_data)
 
 
 class AuthTokenSerializer(serializers.Serializer):
@@ -55,7 +53,7 @@ class AuthTokenSerializer(serializers.Serializer):
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "id",
             "email",
@@ -76,7 +74,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "id",
             "email",

@@ -36,3 +36,9 @@ RESTful API for a social media platform built with Django, Django REST Framework
 3. Access the API and documentation:
    - **Swagger UI:** `http://127.0.0.1:8000/api/docs/swagger/`
    - **Admin Panel:** `http://127.0.0.1:8000/admin/`
+
+## Running Tests & Coverage
+```bash
+   coverage run --source='user,social' manage.py test
+   coverage report -m
+   ```

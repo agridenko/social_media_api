@@ -21,7 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-abp6r23n_ib$u%r&z4ftbkrzqssn))#f!9t8awvipnsr_u$y&5"
+SECRET_KEY = ("django-insecure-abp6r23n_ib$u%r&z4ftbkrzqssn"
+              "))#f!9t8awvipnsr_u$y&5")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -91,16 +92,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "NumericPasswordValidator",
     },
 ]
 
@@ -149,21 +154,39 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Social Media API",
-    "DESCRIPTION": "RESTful API for a social media platform (Users, Profiles, Follows, Posts, Likes, Comments).",
+    "DESCRIPTION": "RESTful API for a social media platform "
+                   "(Users, Profiles, Follows, Posts, Likes, Comments).",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "TAGS": [
-        {"name": "Auth", "description": "User registration, login, and token invalidation"},
-        {"name": "Users & Profiles", "description": "Profile management, user search, and follow system"},
-        {"name": "Posts", "description": "Post creation, feed retrieval, and hashtag filtering"},
-        {"name": "Likes & Comments", "description": "Post likes and comment management"},
+        {
+            "name": "Auth",
+            "description": "User registration, login, and token invalidation"
+        },
+        {
+            "name": "Users & Profiles",
+            "description": "Profile management, user search, and follow system"
+        },
+        {
+            "name": "Posts",
+            "description": "Post creation, feed retrieval, "
+                           "and hashtag filtering"
+        },
+        {
+            "name": "Likes & Comments",
+            "description": "Post likes and comment management"
+        },
     ],
 }
 
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+CELERY_BROKER_URL = os.environ.get(
+    "CELERY_BROKER_URL", "redis://localhost:6379/0"
+)
+CELERY_RESULT_BACKEND = os.environ.get(
+    "CELERY_RESULT_BACKEND", "redis://localhost:6379/0"
+)
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"

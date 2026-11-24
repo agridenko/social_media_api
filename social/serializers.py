@@ -10,15 +10,38 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ("id", "post", "user", "author_email", "author_username", "content", "created_at", "updated_at")
-        read_only_fields = ("id", "post", "user", "created_at", "updated_at")
+        fields = (
+            "id",
+            "post",
+            "user",
+            "author_email",
+            "author_username",
+            "content",
+            "created_at",
+            "updated_at"
+        )
+        read_only_fields = (
+            "id",
+            "post",
+            "user",
+            "created_at",
+            "updated_at"
+        )
 
 
 class PostSerializer(serializers.ModelSerializer):
     author_email = serializers.ReadOnlyField(source="author.email")
-    author_username = serializers.ReadOnlyField(source="author.username")
-    likes_count = serializers.IntegerField(source="likes.count", read_only=True)
-    comments_count = serializers.IntegerField(source="comments.count", read_only=True)
+    author_username = serializers.ReadOnlyField(
+        source="author.username"
+    )
+    likes_count = serializers.IntegerField(
+        source="likes.count",
+        read_only=True
+    )
+    comments_count = serializers.IntegerField(
+        source="comments.count",
+        read_only=True
+    )
     is_liked = serializers.SerializerMethodField()
     hashtags = serializers.SerializerMethodField()
 
@@ -40,13 +63,20 @@ class PostSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "author", "is_published", "created_at", "updated_at")
+        read_only_fields = (
+            "id",
+            "author",
+            "is_published",
+            "created_at",
+            "updated_at"
+        )
 
     def validate_scheduled_at(self, value):
         if value and value <= timezone.now():
-            raise serializers.ValidationError("Scheduled time must be in the future.")
+            raise serializers.ValidationError(
+                "Scheduled time must be in the future."
+            )
         return value
-
 
     def get_is_liked(self, obj) -> bool:
         request = self.context.get("request")
