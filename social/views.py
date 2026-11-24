@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from social.models import Comment, Like, Post
 from social.permissions import IsOwnerOrReadOnly
 from social.serializers import CommentSerializer, PostDetailSerializer, PostSerializer
+from social.tasks import publish_scheduled_post
 
 
 @extend_schema_view(
@@ -92,7 +93,23 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        scheduled_at = serializer.validated_data.get("scheduled_at")
+        if scheduled_at:
+            post = serializer.save(author=self.request.user, is_published=False)
+            publish_scheduled_post.apply_async(args=[post.id], eta=scheduled_at)
+        else:
+            serializer.save(author=self.request.user, is_published=True)
+
+    @extend_schema(
+        tags=["Posts"],
+        summary="List own scheduled posts",
+        description="Returns posts created by the current user that are scheduled for future publication.",
+    )
+    @action(detail=False, methods=["get"], url_path="scheduled")
+    def scheduled(self, request):
+        queryset = Post.objects.filter(author=request.user, is_published=False).select_related("author")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @extend_schema(
         tags=["Likes & Comments"],

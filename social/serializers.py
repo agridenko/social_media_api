@@ -1,6 +1,7 @@
 import re
 from rest_framework import serializers
 from social.models import Comment, Post
+from django.utils import timezone
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -40,6 +41,12 @@ class PostSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = ("id", "author", "is_published", "created_at", "updated_at")
+
+    def validate_scheduled_at(self, value):
+        if value and value <= timezone.now():
+            raise serializers.ValidationError("Scheduled time must be in the future.")
+        return value
+
 
     def get_is_liked(self, obj) -> bool:
         request = self.context.get("request")
