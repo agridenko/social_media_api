@@ -81,6 +81,10 @@ class PostSerializer(serializers.ModelSerializer):
         return value
 
     def get_is_liked(self, obj) -> bool:
+        annotated_value = getattr(obj, "is_liked", None)
+        if annotated_value is not None:
+            return annotated_value
+
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
@@ -91,7 +95,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class PostDetailSerializer(PostSerializer):
-    """Детальний перегляд посту відразу зі списком коментарів."""
+    """Detailed post view with the list of comments included."""
     comments = CommentSerializer(many=True, read_only=True)
 
     class Meta(PostSerializer.Meta):

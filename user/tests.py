@@ -61,7 +61,7 @@ class AuthTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertFalse(Token.objects.filter(user=user).exists())
 
-        # Повторний запит із віддаленим токеном повинен повернути 401
+        # A repeated request with the removed token should return 401.
         res_after = self.client.get(ME_URL)
         self.assertEqual(res_after.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -99,24 +99,24 @@ class ProfileAndFollowTests(APITestCase):
         follow_url = reverse("user:user-follow", args=[self.user2.id])
         unfollow_url = reverse("user:user-unfollow", args=[self.user2.id])
 
-        # підписка
+        # Follow
         res_follow = self.client.post(follow_url)
         self.assertEqual(res_follow.status_code, status.HTTP_200_OK)
         self.assertTrue(
             self.user1.following.filter(id=self.user2.id).exists()
         )
 
-        # Повторна підписка заборонена
+        # Re-subscription blocked
         res_duplicate = self.client.post(follow_url)
         self.assertEqual(
             res_duplicate.status_code, status.HTTP_400_BAD_REQUEST
         )
 
-        # Перевірка списків following та followers
+        # Checking the lists of following and followers
         res_following = self.client.get(reverse("user:user-following"))
         self.assertEqual(len(res_following.data), 1)
 
-        # Відписка
+        # Unsubscribe
         res_unfollow = self.client.post(unfollow_url)
         self.assertEqual(res_unfollow.status_code, status.HTTP_200_OK)
         self.assertFalse(

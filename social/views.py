@@ -1,6 +1,6 @@
 import re
 
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
@@ -67,29 +67,37 @@ from social.tasks import publish_scheduled_post
     ),
 )
 class PostViewSet(viewsets.ModelViewSet):
-    """CRUD для постів, стрічка підписок, фільтрація по хештегам і лайки."""
+    """CRUD for posts, subscriptions feed, hashtag filtering, and likes."""
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
     def get_queryset(self):
         user = self.request.user
-        # Показуємо лише опубліковані пости поточного користувача
-        # та тих, на кого він підписаний
+        # Show only published posts from the current user
+        # and users they follow.
         following_ids = user.following.values_list("id", flat=True)
         queryset = (
             Post.objects.filter(is_published=True)
             .filter(Q(author=user) | Q(author_id__in=following_ids))
             .select_related("author")
-            .prefetch_related("likes", "comments")
+            .prefetch_related("likes", "comments", "comments__user")
+            .annotate(
+                is_liked=Exists(
+                    Like.objects.filter(
+                        post=OuterRef("pk"),
+                        user=user,
+                    )
+                )
+            )
         )
 
-        # Фільтрування по хештегу (?hashtag=django)
+        # Filter by hashtag (?hashtag=django)
         hashtag = self.request.query_params.get("hashtag")
         if hashtag:
             clean_tag = hashtag.lstrip("#")
             escaped_tag = re.escape(clean_tag)
             queryset = queryset.filter(content__iregex=rf"#{escaped_tag}\b")
 
-        # Фільтрування за автором (?author=2)
+        # Filtering by author (?author=2)
         author_id = self.request.query_params.get("author")
         if author_id:
             queryset = queryset.filter(author_id=author_id)
@@ -123,10 +131,21 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"], url_path="scheduled")
     def scheduled(self, request):
-        queryset = Post.objects.filter(
-            author=request.user,
-            is_published=False
-        ).select_related("author")
+        queryset = (
+            Post.objects.filter(
+                author=request.user,
+                is_published=False
+            )
+            .select_related("author")
+            .annotate(
+                is_liked=Exists(
+                    Like.objects.filter(
+                        post=OuterRef("pk"),
+                        user=request.user,
+                    )
+                )
+            )
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -198,10 +217,21 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"], url_path="liked")
     def liked(self, request):
-        queryset = Post.objects.filter(
-            likes__user=request.user,
-            is_published=True
-        ).select_related("author")
+        queryset = (
+            Post.objects.filter(
+                likes__user=request.user,
+                is_published=True
+            )
+            .select_related("author")
+            .annotate(
+                is_liked=Exists(
+                    Like.objects.filter(
+                        post=OuterRef("pk"),
+                        user=request.user,
+                    )
+                )
+            )
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -219,14 +249,15 @@ class PostViewSet(viewsets.ModelViewSet):
     ),
 )
 class PostCommentListCreateView(generics.ListCreateAPIView):
-    """Перегляд та створення коментарів до конкретної посади."""
+    """Review and review of comments to a specific planting."""
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Comment.objects.filter(
-            post_id=self.kwargs["post_id"]
-        ).select_related("user")
+            post_id=self.kwargs["post_id"],
+            post__is_published=True,
+        ).select_related("user", "post")
 
     def perform_create(self, serializer):
         post = get_object_or_404(
@@ -256,7 +287,11 @@ class PostCommentListCreateView(generics.ListCreateAPIView):
     ),
 )
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Редагування та видалення конкретного коментаря (тільки автором)."""
-    queryset = Comment.objects.all()
+    """Editing and editing a specific comment (only by the author)."""
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
+
+    def get_queryset(self):
+        return Comment.objects.filter(
+            post__is_published=True
+        ).select_related("user", "post")

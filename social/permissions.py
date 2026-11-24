@@ -3,15 +3,17 @@ from rest_framework import permissions
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
-    Дозволяє читання (GET, HEAD, OPTIONS)
-    будь-якому авторизованому користувачеві,
-    але зміна та видалення (PUT, PATCH, DELETE) - тільки автору об'єкта.
+    Allows reading (GET, HEAD, OPTIONS)
+    be any authorized koristuvachevi,
+    Also change and delete (PUT, PATCH, DELETE) -
+    only to the author of the object.
     """
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # У Post власник зберігається у полі author, у Comment – у полі user
+        # For Post, the username is stored in the
+        # author field, for Comment – in the user field.
         owner = getattr(obj, "author", None) or getattr(obj, "user", None)
         return owner == request.user

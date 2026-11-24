@@ -30,7 +30,7 @@ class PostAndFeedTests(APITestCase):
             password="password123"
         )
 
-        # user1 підписано тільки на user2
+        # user1 is only subscribed to user2
         self.user1.following.add(self.user2)
         self.client.force_authenticate(user=self.user1)
 
@@ -90,7 +90,7 @@ class PostAndFeedTests(APITestCase):
             content="Other post"
         )
 
-        # Чужий пост не можна оновити або видалити (403 Forbidden)
+        # Someone else's post cannot be updated or visible (403 Forbidden)
         other_url = reverse("social:post-detail", args=[other_post.id])
         self.assertEqual(
             self.client.patch(other_url, {"content": "Hacked"}).status_code,
@@ -101,7 +101,7 @@ class PostAndFeedTests(APITestCase):
             status.HTTP_403_FORBIDDEN
         )
 
-        # Свій пост можна оновити та видалити
+        # You can update and delete your post
         own_url = reverse("social:post-detail", args=[own_post.id])
         self.assertEqual(
             self.client.patch(own_url, {"content": "Updated"}).status_code,
@@ -135,34 +135,34 @@ class LikesAndCommentsTests(APITestCase):
         unlike_url = reverse("social:post-unlike", args=[self.post.id])
         liked_list_url = reverse("social:post-liked")
 
-        # Лайк
+        # Like
         res_like = self.client.post(like_url)
         self.assertEqual(res_like.status_code, status.HTTP_200_OK)
 
-        # Повторний лайк -> 400
+        # Repeat like -> 400
         self.assertEqual(
             self.client.post(like_url).status_code,
             status.HTTP_400_BAD_REQUEST
         )
 
-        # Список лайкнутих постів
+        # List of liked posts
         res_liked = self.client.get(liked_list_url)
         self.assertEqual(len(res_liked.data), 1)
         self.assertEqual(res_liked.data[0]["id"], self.post.id)
 
-        # Анлайк
+        # Unlike
         res_unlike = self.client.post(unlike_url)
         self.assertEqual(res_unlike.status_code, status.HTTP_200_OK)
 
     def test_comments_crud_and_permissions(self):
         comments_url = reverse("social:post-comments", args=[self.post.id])
 
-        # Створення коментаря
+        # Creation of the commentary
         res_create = self.client.post(comments_url, {"content": "Nice post!"})
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
         comment_id = res_create.data["id"]
 
-        # Коментар від іншого користувача
+        # Comment from another contributor
         other_comment = Comment.objects.create(
             user=self.user2, post=self.post, content="Author comment"
         )
@@ -175,7 +175,7 @@ class LikesAndCommentsTests(APITestCase):
             status.HTTP_403_FORBIDDEN,
         )
 
-        # Видалення свого коментаря
+        # See your comment
         own_comment_url = reverse("social:comment-detail", args=[comment_id])
         self.assertEqual(
             self.client.delete(own_comment_url).status_code,
@@ -207,14 +207,14 @@ class ScheduledPostTests(APITestCase):
 
         post_id = res.data["id"]
 
-        # Пост видно в /scheduled/, але не в загальній стрічці
+        # The post is visible in /scheduled/, but not in the hidden page
         self.assertEqual(len(self.client.get(POSTS_URL).data), 0)
         self.assertEqual(
             len(self.client.get(
                 reverse("social:post-scheduled")
             ).data), 1)
 
-        # Викликаємо Celery-завдання безпосередньо та перевіряємо публікацію
+        # We click on the Celery task and check the publication
         result_msg = publish_scheduled_post(post_id)
         self.assertIn("successfully published", result_msg)
         self.assertEqual(len(self.client.get(POSTS_URL).data), 1)

@@ -5,7 +5,7 @@ from social.models import Post
 
 @shared_task
 def publish_scheduled_post(post_id: int) -> str:
-    """Публікує відкладений пост у призначений час."""
+    """Publishes a post at the destination of the hour."""
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
