@@ -1,11 +1,6 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import (
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-    extend_schema_view
-)
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,11 +8,7 @@ from rest_framework.response import Response
 
 from social.models import Comment, Like, Post
 from social.permissions import IsOwnerOrReadOnly
-from social.serializers import (
-    CommentSerializer,
-    PostDetailSerializer,
-    PostSerializer
-)
+from social.serializers import CommentSerializer, PostDetailSerializer, PostSerializer
 from social.tasks import publish_scheduled_post
 
 

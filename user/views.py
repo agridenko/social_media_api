@@ -1,11 +1,6 @@
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import (
-    extend_schema,
-    OpenApiResponse,
-    extend_schema_view,
-    OpenApiParameter
-)
-from rest_framework import generics, status, viewsets, filters
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
@@ -14,10 +9,11 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
-from user.models import User
 from user.serializers import (
     AuthTokenSerializer,
-    UserRegisterSerializer, UserDetailSerializer, UserListSerializer,
+    UserDetailSerializer,
+    UserListSerializer,
+    UserRegisterSerializer,
 )
 
 

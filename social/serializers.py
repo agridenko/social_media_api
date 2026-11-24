@@ -1,7 +1,9 @@
 import re
-from rest_framework import serializers
-from social.models import Comment, Post
+
 from django.utils import timezone
+from rest_framework import serializers
+
+from social.models import Comment, Post
 
 
 class CommentSerializer(serializers.ModelSerializer):
